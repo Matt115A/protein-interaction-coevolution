@@ -1,0 +1,29 @@
+project: protein-interaction-coevolution
+
+# Define each step of the pipeline, mapping scripts to their inputs and outputs
+steps:
+  find_homologues:
+    script: scripts/blast_and_pair.py
+    inputs:
+      - inputs/find_homologues/${project}/queryA.fasta
+      - inputs/find_homologues/${project}/queryB.fasta
+    outputs:
+      - results/find_homologues/${project}/paired_sequences.json
+    params:
+      n_hits: 100
+      email: "your.email@example.com"
+
+  build_msas:
+    script: scripts/build_msas.sh
+    inputs:
+      - results/find_homologues/${project}/paired_sequences.json
+    outputs:
+      - results/msas/${project}/proteinA.aln
+      - results/msas/${project}/proteinB.aln
+
+  coevolution_analysis:
+    script: scripts/coevolution_analysis.py
+    inputs:
+      - results/msas/${project}/
+    outputs:
+      - results/coevolution/${project}/coevolution_results.csv
