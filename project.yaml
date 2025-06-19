@@ -10,8 +10,8 @@ steps:
     outputs:
       - results/find_homologues/${project}/paired_sequences.json
     params:
-      n_hits: 100
-      email: "your.email@example.com"
+      n_hits: 5000
+      email: "mp957@cam.ac.uk"
 
   build_msas:
     script: scripts/build_msas.sh
