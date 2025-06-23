@@ -18,15 +18,5 @@ coevolution:
 	  --indir results/msas/$(PROJECT)/ \
 	  --out results/coevolution/$(PROJECT)/coevolution_results.csv
 
-
-visualize: results/vis_coev_scatter.png results/vis_coev_heatmap.png
-
-results/vis_coev_scatter.png results/vis_coev_heatmap.png: \
-    results/proteinAB.aln \
-    results/coevolution_results.csv \
-    vis_coevolution.py
-	@echo " ⤷ Generating co-evolution plots…"
-	python3 vis_coevolution.py \
-	  --msa  $< \
-	  --couplings results/coevolution_results.csv \
-	  --out  results/vis_coev
+heatmap:
+	python3 scripts/generate_heatmaps.py --project $(PROJECT)

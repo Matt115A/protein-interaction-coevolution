@@ -1,6 +1,6 @@
+# ci-pipeline.yaml
 project: protein-interaction-coevolution
 
-# Define each step of the pipeline, mapping scripts to their inputs and outputs
 steps:
   find_homologues:
     script: scripts/blast_and_pair.py
@@ -20,10 +20,23 @@ steps:
     outputs:
       - results/msas/${project}/proteinA.aln
       - results/msas/${project}/proteinB.aln
+      - results/msas/${project}/proteinAB.aln
 
   coevolution_analysis:
     script: scripts/coevolution_analysis.py
     inputs:
-      - results/msas/${project}/
+      - results/msas/${project}/proteinAB.aln
     outputs:
-      - results/coevolution/${project}/coevolution_results.csv
+      - results/coevolution/${project}/coevolution_results.couplings
+
+  generate_heatmaps:
+    script: scripts/generate_heatmaps.py
+    inputs:
+      - results/find_homologues/${project}/paired_sequences.json
+      - results/msas/${project}/proteinAB.aln
+      - results/coevolution/${project}/coevolution_results.couplings
+    outputs:
+      - results/heatmaps/${project}/couplings_mapped.csv
+      - results/heatmaps/${project}/global_heatmap.png
+      - results/heatmaps/${project}/network_top95.png
+      - results/heatmaps/${project}/network_top98.png
