@@ -3,6 +3,9 @@ To use this repo:
 chmod +x setup.sh
 ./setup.sh
 
+Overall, this code allows you to test two sequences for co-evolving positions and surfaces. It is still evolving code!
+
+
 # protien-interaction-coevolution
 
 commands: 
