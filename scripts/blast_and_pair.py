@@ -12,12 +12,19 @@ import os
 import sys
 import time
 import logging
-import re
 from io import StringIO
 from collections import defaultdict
-from itertools import product
+
 from Bio import Entrez, SeqIO
 from Bio.Blast import NCBIXML, NCBIWWW
+
+# Ensure project root is on PYTHONPATH so we can import utils
+HERE = os.path.abspath(os.path.dirname(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(HERE, '..'))
+sys.path.insert(0, PROJECT_ROOT)
+
+# Import the debug helper
+from utils.debug_entrez import debug_entrez
 
 # Cache for accession→assemblies
 CACHE_MAP = {}
@@ -96,7 +103,8 @@ def map_accession(accession, email):
     uid = None
     try:
         es = Entrez.esearch(db='protein', term=f"{accession}[Accession]")
-        rec = Entrez.read(es); es.close()
+        rec = Entrez.read(es)
+        es.close()
         logging.debug(f"esearch record for {accession}: {rec}")
         ids = rec.get('IdList', [])
         if ids:
@@ -105,7 +113,7 @@ def map_accession(accession, email):
         else:
             logging.warning(f"  → No protein UID found for {accession}")
     except Exception as e:
-        logging.error(f"  esearch ERROR for {accession}: {e}")
+        logging.error(f"  esearch ERROR for {accession}: {e} (skipping UID mapping)")
 
     UID_LOG_FH.write(f"{accession}\t{uid or ''}\n")
     UID_LOG_FH.flush()
@@ -115,28 +123,27 @@ def map_accession(accession, email):
     if uid:
         try:
             el = Entrez.elink(dbfrom='protein', db='assembly', id=uid)
-            recs = Entrez.read(el); el.close()
+            recs = Entrez.read(el)
+            el.close()
             logging.debug(f"elink protein→assembly raw: {recs}")
             for linkset in recs:
                 for linkdb in linkset.get('LinkSetDb', []):
-                    logging.debug(f"  LinkSetDb name={linkdb.get('LinkName')}, count={len(linkdb.get('Link',[]))}")
                     for link in linkdb.get('Link', []):
                         asm_uids.append(link['Id'])
             logging.info(f"  → PRIMARY elink returned {len(asm_uids)} assembly UIDs")
         except Exception as e:
-            logging.error(f"  elink ERROR for UID {uid}: {e}")
+            logging.error(f"  elink ERROR for UID {uid}: {e} (continuing fallback)")
     else:
         logging.info("  → Skipping primary elink (no UID)")
 
     # --- 3) SECONDARY FALLBACK: protein → nuccore → assembly ---
     if not asm_uids and uid:
         logging.info("  → No direct assemblies: trying protein→nuccore→assembly fallback")
-        # 3a) protein → nuccore
         nuc_ids = []
         try:
             el2 = Entrez.elink(dbfrom='protein', db='nuccore', id=uid)
-            rec2 = Entrez.read(el2); el2.close()
-            logging.debug(f"elink protein→nuccore raw: {rec2}")
+            rec2 = Entrez.read(el2)
+            el2.close()
             for ls in rec2:
                 for ldb in ls.get('LinkSetDb', []):
                     for link in ldb.get('Link', []):
@@ -145,12 +152,11 @@ def map_accession(accession, email):
         except Exception as e:
             logging.error(f"    protein→nuccore elink ERROR: {e}")
 
-        # 3b) nuccore → assembly
         if nuc_ids:
             try:
                 el3 = Entrez.elink(dbfrom='nuccore', db='assembly', id=','.join(nuc_ids))
-                rec3 = Entrez.read(el3); el3.close()
-                logging.debug(f"elink nuccore→assembly raw: {rec3}")
+                rec3 = Entrez.read(el3)
+                el3.close()
                 for ls in rec3:
                     for ldb in ls.get('LinkSetDb', []):
                         for link in ldb.get('Link', []):
@@ -165,8 +171,8 @@ def map_accession(accession, email):
     if asm_uids:
         try:
             sum_h = Entrez.esummary(db='assembly', id=','.join(asm_uids))
-            summary = Entrez.read(sum_h); sum_h.close()
-            logging.debug(f"esummary raw: {summary}")
+            summary = Entrez.read(sum_h)
+            sum_h.close()
             docs = summary.get('DocumentSummarySet', {}).get('DocumentSummary', [])
             logging.info(f"  → esummary returned {len(docs)} docs")
             for doc in docs:
@@ -183,11 +189,10 @@ def map_accession(accession, email):
     if not assemblies and uid:
         try:
             xf = Entrez.efetch(db='protein', id=uid, retmode='xml')
-            docs = Entrez.read(xf); xf.close()
-            logging.debug(f"efetch XML docs: {docs}")
+            docs = Entrez.read(xf)
+            xf.close()
             for doc in docs:
                 xrefs = doc.get('GBSeq_xref', [])
-                logging.info(f"  → Found {len(xrefs)} xref entries in XML fallback")
                 for xr in xrefs:
                     if xr.get('GBXref_dbname') == 'Assembly' and xr.get('GBXref_id'):
                         assemblies.append(xr['GBXref_id'])
@@ -200,21 +205,18 @@ def map_accession(accession, email):
     return assemblies
 
 
-
 def fetch_sequences(accessions, email, batch_size):
     Entrez.email = email
     seqs = {}
     for i in range(0, len(accessions), batch_size):
         batch = accessions[i:i+batch_size]
-        handle = Entrez.efetch(db='protein', id=','.join(batch),
-                               rettype='fasta', retmode='text')
+        handle = Entrez.efetch(db='protein', id=','.join(batch), rettype='fasta', retmode='text')
         for rec in SeqIO.parse(handle, 'fasta'):
-            base = rec.id.split('.')[0]      # strip version here
+            base = rec.id.split('.')[0]
             seqs[base] = rec
         handle.close()
         time.sleep(0.4)
     return seqs
-
 
 
 def main():
@@ -228,6 +230,9 @@ def main():
     parser.add_argument('--tax-filter', default='mammalia[Organism]')
     args = parser.parse_args()
 
+    # Verify Entrez availability before proceeding
+    debug_entrez(email=args.email)
+
     out_dir = os.path.dirname(args.out)
     os.makedirs(out_dir, exist_ok=True)
     hitsA_file = os.path.join(out_dir,'hitsA_list.json')
@@ -236,7 +241,6 @@ def main():
     summary_file= os.path.join(out_dir,'assembly_summary.tsv')
 
     global UID_LOG_FH
-    # Open or create UID log
     UID_LOG_FH = open(uid_file,'a') if os.path.exists(uid_file) else open(uid_file,'w')
     if os.path.getsize(uid_file)==0:
         UID_LOG_FH.write('accession\tuid\n')
@@ -247,48 +251,54 @@ def main():
     hitsB = blast_hits(args.queryB, args.n_hits, args.tax_filter, hitsB_file)
 
     # Map
-    asm_map = defaultdict(lambda:{'A':[], 'B':[]})
+    asm_map = defaultdict(lambda: {'A': [], 'B': []})
     logging.info(f"Mapping {len(hitsA)} QueryA hits...")
-    for idx,hit in enumerate(hitsA,1):
-        acc=hit['accession']
+    for idx, hit in enumerate(hitsA, 1):
+        acc = hit['accession']
         logging.info(f"[{idx}/{len(hitsA)}] {acc}")
-        asms=map_accession(acc,args.email)
+        asms = map_accession(acc, args.email)
         for a in asms:
             asm_map[a]['A'].append(acc)
     logging.info(f"Mapping {len(hitsB)} QueryB hits...")
-    for idx,hit in enumerate(hitsB,1):
-        acc=hit['accession']
+    for idx, hit in enumerate(hitsB, 1):
+        acc = hit['accession']
         logging.info(f"[{idx}/{len(hitsB)}] {acc}")
-        asms=map_accession(acc,args.email)
+        asms = map_accession(acc, args.email)
         for a in asms:
             asm_map[a]['B'].append(acc)
 
     # Summary
-    with open(summary_file,'w') as f:
+    with open(summary_file, 'w') as f:
         f.write('assembly\tA_hits\tB_hits\n')
-        for a,counts in asm_map.items():
+        for a, counts in asm_map.items():
             f.write(f"{a}\t{len(counts['A'])}\t{len(counts['B'])}\n")
     logging.info(f"Wrote assembly summary to {summary_file}")
-    assemblies=[a for a,c in asm_map.items() if c['A'] and c['B']]
+    assemblies = [a for a, c in asm_map.items() if c['A'] and c['B']]
     logging.info(f"Assemblies with both hits: {len(assemblies)}")
 
     # Fetch sequences
-    all_accs=sorted({h['accession'] for h in hitsA+hitsB})
-    seqs=fetch_sequences(all_accs,args.email,100)
+    all_accs = sorted({h['accession'] for h in hitsA + hitsB})
+    seqs = fetch_sequences(all_accs, args.email, 100)
 
     # Pair
-    pairs=[]
+    pairs = []
     for a in assemblies:
         for x in asm_map[a]['A']:
             for y in asm_map[a]['B']:
-                r1,r2=seqs.get(x),seqs.get(y)
+                r1, r2 = seqs.get(x), seqs.get(y)
                 if r1 and r2:
-                    pairs.append({'assembly':a,'proteinA':{'id':r1.id,'seq':str(r1.seq)},'proteinB':{'id':r2.id,'seq':str(r2.seq)}})
-    with open(args.out,'w') as f:
-        json.dump(pairs,f,indent=2)
+                    pairs.append({
+                        'assembly': a,
+                        'proteinA': {'id': r1.id, 'seq': str(r1.seq)},
+                        'proteinB': {'id': r2.id, 'seq': str(r2.seq)}
+                    })
+    with open(args.out, 'w') as f:
+        json.dump(pairs, f, indent=2)
     logging.info(f"Wrote {len(pairs)} pairs to {args.out}")
 
     UID_LOG_FH.close()
     logging.info('--- Pipeline end ---')
 
-if __name__=='__main__': main()
+
+if __name__ == '__main__':
+    main()

@@ -10,7 +10,7 @@ steps:
     outputs:
       - results/find_homologues/${project}/paired_sequences.json
     params:
-      n_hits: 5000
+      n_hits: 500
       email: "mp957@cam.ac.uk"
 
   build_msas:
