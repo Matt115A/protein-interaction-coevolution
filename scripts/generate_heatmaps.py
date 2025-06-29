@@ -168,7 +168,25 @@ def main():
     # --- 6) networks at fixed percentiles ---
     net_pcts = [95.0, 99.0, 99.9, 99.99]
     thr_vals = [np.percentile(df['value'], p) for p in net_pcts]
-    def plot_network(thr,label,fname):
+
+    # helper to turn a list of residue indices into contiguous segments
+    def find_segs(idxs):
+        idxs = sorted(set(int(x) for x in idxs))
+        if not idxs:
+            return []
+        segs = []
+        s = idxs[0]
+        p = s
+        for x in idxs[1:]:
+            if x == p+1:
+                p = x
+            else:
+                segs.append((s, p))
+                s = p = x
+        segs.append((s, p))
+        return segs
+
+    def plot_network(thr, label, fname):
         ya, yb = np.linspace(0,1,lenA), np.linspace(0,1,lenB)
         pos_net = {f'A{i}':(0,ya[i-1]) for i in range(1,lenA+1)}
         pos_net.update({f'B{j}':(1,yb[j-1]) for j in range(1,lenB+1)})
@@ -180,7 +198,8 @@ def main():
         B_regs = find_segs(top['B_idx'])
 
         fig,ax=plt.subplots(figsize=(10,6)); ax.axis('off')
-        for x,y in pos_net.values(): ax.scatter(x,y,s=5,color='lightgrey',alpha=0.5)
+        for x,y in pos_net.values():
+            ax.scatter(x,y,s=5,color='lightgrey',alpha=0.5)
         if disN:
             ax.add_patch(patches.Rectangle((-0.05,disN[0]),0.05,disN[1]-disN[0],
                                           color='lightgrey',alpha=0.3))
@@ -218,7 +237,7 @@ def main():
 
     # plot at fixed percentiles
     for pct,thr in zip(net_pcts,thr_vals):
-        plot_network(thr,f'Top {100-pct:.3g}%',f'network_top{pct}')
+        plot_network(thr, f'Top {100-pct:.3g}%', f'network_top{pct}')
 
     # --- 7) adaptive networks for ~20 and ~100 edges ---
     scores = np.sort(inter_df['score'].values)[::-1]
@@ -232,7 +251,7 @@ def main():
     plot_network(thr100,f'~100 edges ({(inter_df["score"]>=thr100).sum()})','network_100')
 
     # --- 8) counts vs threshold sweep (1%->0.001%) ---
-    def find_segs(idxs):  # reuse helper
+    def find_segs(idxs):  # reuse helper (not used here)
         idxs=sorted(set(int(x) for x in idxs))
         if not idxs: return []
         segs=[]; s=idxs[0]; p=s

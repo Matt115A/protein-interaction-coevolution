@@ -1,4 +1,4 @@
-PROJECT := protein-interaction-coevolution
+PROJECT := ABO
 
 find:
 	python scripts/blast_and_pair.py \

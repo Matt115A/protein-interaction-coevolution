@@ -1,5 +1,5 @@
 # ci-pipeline.yaml
-project: protein-interaction-coevolution
+project: ABO
 
 steps:
   find_homologues:
