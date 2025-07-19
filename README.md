@@ -27,19 +27,16 @@ This pipeline enables the detection and visualization of co-evolving positions b
    git clone <repo-url>
    cd protein-interaction-coevolution
    ```
-2. **Install Python dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. **Run setup:**
+2. **Run setup:**
    ```bash
    chmod +x setup.sh
    ./setup.sh
    ```
-4. **Install MAFFT:**
+   This will install all required Python dependencies automatically.
+3. **Install MAFFT:**
    - MAFFT is required for multiple sequence alignment. Install via your package manager (e.g., `brew install mafft` on macOS, `apt-get install mafft` on Ubuntu) or from [the official website](https://mafft.cbrc.jp/alignment/software/).
 
-5. **Install PLMC:**
+4. **Install PLMC:**
    - PLMC is required for coevolution analysis. Download and compile PLMC from [the official repository](https://github.com/debbiemarkslab/plmc):
      ```bash
      git clone https://github.com/debbiemarkslab/plmc.git
