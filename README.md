@@ -1,6 +1,6 @@
 # Protein Interaction Coevolution Pipeline
 
-> A modular pipeline for detecting co-evolving residues between interacting protein pairs, inspired by [Hopf et al., 2021, Nature Communications](https://www.nature.com/articles/s41467-021-21636-z).
+> A modular pipeline for detecting co-evolving residues between interacting protein pairs, inspired by [Green et al., 2021, Nature Communications](https://doi.org/10.1038/s41467-021-21636-z).
 
 ---
 
@@ -133,7 +133,7 @@ This pipeline enables the detection and visualization of co-evolving positions b
 ## Reference
 This pipeline is inspired by:
 
-Hopf, T. A., Ingraham, J. B., Poelwijk, F. J., Schärfe, C. P. I., Springer, M., Sander, C., & Marks, D. S. (2021). Mutation effects predicted from sequence co-variation. *Nature Communications*, 12, 1232. [https://www.nature.com/articles/s41467-021-21636-z](https://www.nature.com/articles/s41467-021-21636-z)
+Green, A.G., Elhabashy, H., Brock, K.P. et al. Large-scale discovery of protein interactions at residue resolution using co-evolution calculated from genomic sequences. Nat Commun 12, 1396 (2021). https://doi.org/10.1038/s41467-021-21636-z
 
 If you use this pipeline, please cite the above work and this repository.
 
