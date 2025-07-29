@@ -1,0 +1,32 @@
+[
+  {
+    "accession": "NP_000502",
+    "evalue": 0.0,
+    "bit_score": 717.227,
+    "align_len": 343
+  },
+  {
+    "accession": "UZP80250",
+    "evalue": 0.0,
+    "bit_score": 716.457,
+    "align_len": 343
+  },
+  {
+    "accession": "QOI91014",
+    "evalue": 0.0,
+    "bit_score": 716.457,
+    "align_len": 343
+  },
+  {
+    "accession": "UZP80249",
+    "evalue": 0.0,
+    "bit_score": 715.687,
+    "align_len": 343
+  },
+  {
+    "accession": "AAU47383",
+    "evalue": 0.0,
+    "bit_score": 715.301,
+    "align_len": 343
+  }
+]

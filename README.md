@@ -33,21 +33,11 @@ This pipeline enables the detection and visualization of co-evolving positions b
    ./setup.sh
    ```
    This will install all required Python dependencies automatically.
-3. **Install MAFFT:**
-   - MAFFT is required for multiple sequence alignment. Install via your package manager (e.g., `brew install mafft` on macOS, `apt-get install mafft` on Ubuntu) or from [the official website](https://mafft.cbrc.jp/alignment/software/).
-
-4. **Install PLMC:**
-   - PLMC is required for coevolution analysis. Download and compile PLMC from [the official repository](https://github.com/debbiemarkslab/plmc):
-     ```bash
-     git clone https://github.com/debbiemarkslab/plmc.git
-     cd plmc
-     make
-     ```
-   - After compilation, copy the `plmc` binary to a directory in your `PATH` (e.g., `/usr/local/bin`) **or** place it in the root of this repository. The pipeline will look for `plmc` in your `PATH` or in the current working directory.
-   - To test your installation:
-     ```bash
-     plmc -h
-     ```
+3. **External tools:**
+   - MAFFT and PLMC are automatically installed by the setup script via conda.
+   - If you need to install them manually:
+     - MAFFT: `conda install -c conda-forge mafft`
+     - PLMC: `conda install -c bioconda plmc`
 
 ---
 
@@ -55,7 +45,7 @@ This pipeline enables the detection and visualization of co-evolving positions b
 
 1. **Prepare your input:**
    - Place your two query FASTA files as `queryA.fasta` and `queryB.fasta` in `inputs/find_homologues/PROJECT/`.
-   - Set the `project` name in `project.yaml`.
+   - Set the `PROJECT` variable in the Makefile (currently set to `ABO`).
 
 2. **Run the pipeline:**
    ```bash

@@ -18,10 +18,9 @@ conda activate "$ENV_NAME"
 echo "[3/4] Installing Python requirements via pip..."
 pip install -r requirements.txt
 
-echo "[4/4] Installing accessories..."
-conda install fastp
-conda install pear
+echo "[4/4] Installing external tools via conda..."
+conda install -c bioconda plmc
+conda install -c conda-forge mafft
 
 echo "Setup complete. To activate your environment later, run:"
 echo "   conda activate $ENV_NAME"
-conda activate "$ENV_NAME"

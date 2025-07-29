@@ -1,0 +1,32 @@
+[
+  {
+    "accession": "P16442",
+    "evalue": 0.0,
+    "bit_score": 735.332,
+    "align_len": 354
+  },
+  {
+    "accession": "WNB50538",
+    "evalue": 0.0,
+    "bit_score": 734.176,
+    "align_len": 354
+  },
+  {
+    "accession": "XMD29492",
+    "evalue": 0.0,
+    "bit_score": 734.176,
+    "align_len": 354
+  },
+  {
+    "accession": "WEX30109",
+    "evalue": 0.0,
+    "bit_score": 733.791,
+    "align_len": 354
+  },
+  {
+    "accession": "CAM1736546",
+    "evalue": 0.0,
+    "bit_score": 733.791,
+    "align_len": 354
+  }
+]
