@@ -4,7 +4,7 @@ find:
 	python scripts/blast_and_pair.py \
 	  --queryA inputs/find_homologues/$(PROJECT)/queryA.fasta \
 	  --queryB inputs/find_homologues/$(PROJECT)/queryB.fasta \
-	  --n-hits 500 \
+	  --n-hits 50 \
 	  --email mp957@cam.ac.uk \
 	  --out results/find_homologues/$(PROJECT)/paired_sequences.json
 
